@@ -1,7 +1,7 @@
-package com.booknest.notification;
+package com.booknest.review;
 
-import com.booknest.notification.controller.NotificationResource;
-import com.booknest.notification.service.NotificationService;
+import com.booknest.review.controller.ReviewResource;
+import com.booknest.review.service.ReviewService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -14,20 +14,21 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(NotificationResource.class)
-public class NotificationControllerTest {
+@WebMvcTest(ReviewResource.class)
+public class ReviewControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private NotificationService notificationService;
+    private ReviewService reviewService;
 
     @Test
-    public void testGetNotificationsByUser() throws Exception {
-        when(notificationService.getByUser(1L)).thenReturn(Collections.emptyList());
+    public void testGetReviewsByBook() throws Exception {
+        // Fix: Method name in ReviewService is getByBook
+        when(reviewService.getByBook(1L)).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/notifications/user/1"))
+        mockMvc.perform(get("/reviews/book/1"))
                 .andExpect(status().isOk());
     }
 }
