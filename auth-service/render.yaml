@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: auth-service
+    runtime: docker
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+
+      - key: PORT
+        value: 8081
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: SPRING_DATA_REDIS_HOST
+        fromService:
+          type: redis
+          name: auth-redis
+          property: host
+      - key: SPRING_DATA_REDIS_PORT
+        fromService:
+          type: redis
+          name: auth-redis
+          property: port
+      - key: EUREKA_SERVER_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: RENDER_HOSTNAME
+        fromContext: host
+
+  - type: redis
+    name: auth-redis
+    plan: free
+    ipAllowList: [] # Only allow internal connections

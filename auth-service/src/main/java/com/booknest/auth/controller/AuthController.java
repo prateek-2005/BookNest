@@ -27,8 +27,17 @@ public class AuthController {
     private UserRepository userRepository;
 
     // ---------------- CUSTOMER ----------------
+    @PostMapping("/send-otp")
+    public ResponseEntity<String> sendOtp(@RequestParam String email) {
+        authService.sendOtp(email);
+        return ResponseEntity.ok("OTP sent to your email");
+    }
+
     @PostMapping("/customer/register")
-    public ResponseEntity<User> registerCustomer(@RequestBody RegisterRequest req) {
+    public ResponseEntity<?> registerCustomer(@RequestBody RegisterRequest req, @RequestParam String otp) {
+        if (!authService.verifyOtp(req.getEmail(), otp)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+        }
         User user = new User();
         user.setFullName(req.getFullName());
         user.setEmail(req.getEmail());
@@ -45,12 +54,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid customer credentials");
         }
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        authService.createSession(token, user.getEmail());
         return ResponseEntity.ok(new AuthResponse(token, user.getUserId(), user.getFullName(), user.getEmail(), user.getRole()));
     }
 
     // ---------------- ADMIN ----------------
     @PostMapping("/admin/register")
-    public ResponseEntity<User> registerAdmin(@RequestBody RegisterRequest req) {
+    public ResponseEntity<?> registerAdmin(@RequestBody RegisterRequest req, @RequestParam String otp) {
+        if (!authService.verifyOtp(req.getEmail(), otp)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+        }
         User user = new User();
         user.setFullName(req.getFullName());
         user.setEmail(req.getEmail());
@@ -67,6 +80,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid admin credentials");
         }
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole());
+        authService.createSession(token, user.getEmail());
         return ResponseEntity.ok(new AuthResponse(token, user.getUserId(), user.getFullName(), user.getEmail(), user.getRole()));
     }
 
@@ -112,7 +126,10 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody com.booknest.auth.dto.ResetPasswordRequest req) {
+    public ResponseEntity<String> resetPassword(@RequestBody com.booknest.auth.dto.ResetPasswordRequest req, @RequestParam String otp) {
+        if (!authService.verifyOtp(req.getEmail(), otp)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired OTP");
+        }
         authService.resetPassword(req.getEmail(), req.getMobile(), req.getNewPassword());
         return ResponseEntity.ok("Password reset successfully");
     }
@@ -134,5 +151,12 @@ public class AuthController {
     public ResponseEntity<Void> deleteUser(@PathVariable int userId) {
         userRepository.deleteById(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/user/{userId}/email")
+    public ResponseEntity<String> getUserEmail(@PathVariable int userId) {
+        return userRepository.findById(userId)
+            .map(u -> ResponseEntity.ok(u.getEmail()))
+            .orElse(ResponseEntity.notFound().build());
     }
 }

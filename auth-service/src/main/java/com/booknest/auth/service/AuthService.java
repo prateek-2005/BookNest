@@ -11,4 +11,9 @@ public interface AuthService {
     void resetPassword(String email, Long mobile, String newPassword);
     void changeMobile(int id, Long mobile);
     boolean validateToken(String token);                // validate JWT
+    void createSession(String token, String email);     // create Redis session
+    
+    // OTP Methods
+    void sendOtp(String email);
+    boolean verifyOtp(String email, String otp);
 }
